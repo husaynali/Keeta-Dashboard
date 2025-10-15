@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Keeta Report</title>
+<style>
+  :root{
+    --keeta-yellow:#F8C80E;
+    --ink:#111;
+    --paper:#fff;
+    --mist:#f6f6f6;
+    --line:#e7e7e7;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial,sans-serif;
+    color:var(--ink);
+    background:linear-gradient(180deg,#fff 0%,#f9f9f9 100%);
+  }
+  .wrap{max-width:1200px;margin:auto;padding:16px}
+
+  /* Topbar */
+  .topbar{
+    position:sticky;top:0;z-index:5;
+    background:rgba(255,255,255,.85);
+    backdrop-filter:blur(6px);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:12px 16px;
+    margin-bottom:14px;
+    display:flex;align-items:center;justify-content:space-between
+  }
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand-badge{
+    width:36px;height:36px;border-radius:12px;
+    background:var(--keeta-yellow);
+    display:grid;place-items:center;font-weight:900;
+  }
+  .brand-name{font-weight:900;font-size:20px;letter-spacing:.2px}
+  .actions{display:flex;gap:8px;align-items:center}
+  .btn{
+    border:none;border-radius:999px;padding:10px 14px;
+    font-weight:700;cursor:pointer
+  }
+  .btn.primary{background:var(--keeta-yellow)}
+
+  /* Shell card */
+  .shell{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:24px;
+    overflow:hidden;
+    box-shadow:0 10px 30px rgba(0,0,0,.06)
+  }
+  .grid{display:grid;gap:16px}
+  .p-20{padding:20px}
+
+  /* KPI */
+  .kpis{grid-template-columns:repeat(4,1fr)}
+  .kpi{
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:14px 16px;
+    background:var(--paper)
+  }
+  .kpi .label{font-size:12px;color:#666}
+  .kpi .val{font-size:22px;font-weight:900}
+  .muted{color:#666}
+
+  /* Charts grid */
+  .charts{grid-template-columns:repeat(2,1fr)}
+  .card{
+    border:1px solid var(--line);
+    border-radius:16px;
+    background:var(--paper);
+  }
+  .card h3{margin:14px 16px 0 16px;font-size:14px}
+  .plot{height:300px;padding:10px 12px 16px 12px}
+  .legend{
+    display:flex;gap:12px;align-items:center;margin:8px 16px 14px 16px
+  }
+  .dot{width:10px;height:10px;border-radius:50%}
+
+  /* Center pie chart */
+  .pie-plot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #mixChart {
+    display: block;
+    margin: auto;
+    max-width: 280px;
+    max-height: 280px;
+  }
+
+  /* Responsive */
+  @media (max-width:980px){
+    .charts{grid-template-columns:1fr}
+    .kpis{grid-template-columns:repeat(2,1fr)}
+  }
+  @media (max-width:560px){
+    .kpis{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-badge">K</div>
+        <div class="brand-name">Keeta ChatOps</div>
+      </div>
+      <div class="actions">
+        <button class="btn primary" onclick="downloadCSV()">Export Data</button>
+      </div>
+    </div>
+
+    <!-- Main Shell -->
+    <div class="shell">
+      <div class="p-20 grid kpis">
+        <div class="kpi">
+          <div class="label">Total Chats</div>
+          <div class="val">{{ total_chats }}</div>
+        </div>
+        <div class="kpi">
+          <div class="label">Avg Response Time</div>
+          <div class="val">{{ avg_response }}</div>
+        </div>
+        <div class="kpi">
+          <div class="label">Customer Satisfaction</div>
+          <div class="val">{{ avg_csat }}</div>
+        </div>
+        <div class="kpi">
+          <div class="label">Active Agents</div>
+          <div class="val">{{ avg_agents }}</div>
+        </div>
+      </div>
+
+      <div class="p-20 grid charts">
+        <!-- CHART 1: Chats per Day -->
+        <div class="card">
+          <h3>Chats per Day</h3>
+          <div class="plot"><canvas id="chatsChart"></canvas></div>
+          <div class="legend">
+            <span class="dot" style="background:#111"></span><span class="muted">Total Chats</span>
+          </div>
+        </div>
+
+        <!-- CHART 2: Avg Response Time -->
+        <div class="card">
+          <h3>Avg Response Time (sec)</h3>
+          <div class="plot"><canvas id="responseChart"></canvas></div>
+          <div class="legend">
+            <span class="dot" style="background:var(--keeta-yellow)"></span><span class="muted">Response Time</span>
+          </div>
+        </div>
+
+        <!-- CHART 3: Department Mix -->
+        <div class="card">
+          <h3>Chat Distribution by Department</h3>
+          <div class="plot pie-plot"><canvas id="mixChart"></canvas></div>
+        </div>
+
+        <!-- CHART 4: Agents vs CSAT -->
+        <div class="card">
+          <h3>Agents vs CSAT</h3>
+          <div class="plot"><canvas id="agentsCsatChart"></canvas></div>
+          <div class="legend">
+            <span class="dot" style="background:#111"></span><span class="muted">Agents</span>
+            <span style="width:10px"></span>
+            <span class="dot" style="background:var(--keeta-yellow)"></span><span class="muted">CSAT</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-20 muted" style="text-align:center">
+        Data-driven Chat Operations dashboard — Powered by e& CX Solutions Egypt
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Fetch CSS colors
+  const rootStyles = getComputedStyle(document.documentElement);
+  const keetaYellow = rootStyles.getPropertyValue('--keeta-yellow').trim() || '#F8C80E';
+  const ink = rootStyles.getPropertyValue('--ink').trim() || '#111';
+  const mist = rootStyles.getPropertyValue('--mist').trim() || '#f6f6f6';
+
+  // Inject Flask data
+  const chatsTrend = {{ chats_trend | tojson }};
+  const responseTrend = {{ response_trend | tojson }};
+  const categoryMix = {{ category_mix | tojson }};
+  const agentsCsat = {{ agents_csat | tojson }};
+
+  // CHART 1: Chats per Day
+  new Chart(document.getElementById('chatsChart'), {
+    type: 'line',
+    data: {
+      labels: chatsTrend.map(d => d.day),
+      datasets: [{
+        label: 'Chats',
+        data: chatsTrend.map(d => d.total_chats),
+        borderColor: ink,
+        backgroundColor: `${ink}22`,
+        tension: 0.3
+      }]
+    },
+    options: { responsive:true, scales:{ y:{ beginAtZero:true } } }
+  });
+
+  // CHART 2: Avg Response Time
+  new Chart(document.getElementById('responseChart'), {
+    type: 'bar',
+    data: {
+      labels: responseTrend.map(d => d.day),
+      datasets: [{
+        label: 'Response Time',
+        data: responseTrend.map(d => d.avg_response_time),
+        backgroundColor: keetaYellow
+      }]
+    },
+    options: { responsive:true, scales:{ y:{ beginAtZero:true } } }
+  });
+
+  // CHART 3: Department Mix (Pie)
+  new Chart(document.getElementById('mixChart'), {
+    type: 'pie',
+    data: {
+      labels: Object.keys(categoryMix),
+      datasets: [{
+        data: Object.values(categoryMix),
+        backgroundColor: [
+          ink,
+          keetaYellow,
+          '#888',
+          '#ccc'
+        ]
+      }]
+    },
+    options: { responsive:true, maintainAspectRatio: false }
+  });
+
+  // CHART 4: Agents vs CSAT
+  new Chart(document.getElementById('agentsCsatChart'), {
+    type: 'bar',
+    data: {
+      labels: agentsCsat.map(d => d.day),
+      datasets: [
+        {
+          label: 'Active Agents',
+          data: agentsCsat.map(d => d.active_agents),
+          backgroundColor: ink,
+          yAxisID: 'y'
+        },
+        {
+          label: 'CSAT',
+          data: agentsCsat.map(d => d.csat * 100),
+          borderColor: keetaYellow,
+          backgroundColor: `${keetaYellow}44`,
+          type: 'line',
+          yAxisID: 'y1'
+        }
+      ]
+    },
+    options: {
+      responsive:true,
+      scales: {
+        y: { beginAtZero:true, title:{ display:true, text:'Agents' } },
+        y1: {
+          beginAtZero:true, position:'right',
+          title:{ display:true, text:'CSAT (%)' },
+          grid: { drawOnChartArea:false }
+        }
+      }
+    }
+  });
+
+  // CSV Download placeholder
+  function downloadCSV() {
+    const rows = [['Day','Chats'], ...chatsTrend.map(d => [d.day, d.total_chats])];
+    const csv = rows.map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'keeta_report.csv';
+    link.click();
+  }
+</script>
+
+</body>
+</html>
+
