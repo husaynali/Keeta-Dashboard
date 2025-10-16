@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Keeta Dashboard — Overall</title>
+<style>
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial, sans-serif;
+  color: #111;
+  background: #f9f9f9;
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 280px;
+  background: #fff;
+  border-radius: 24px;
+  padding: 20px;
+  position: sticky;
+  top: 20px;
+  height: calc(100vh - 40px);
+  margin: 10px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar h2 {
+  font-size: 18px;
+  margin-bottom: 16px;
+  font-weight: 900;
+}
+
+.sidebar form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sidebar label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.sidebar select, .sidebar input {
+  padding: 10px 12px;
+  border: 1px solid #e7e7e7;
+  border-radius: 12px;
+  font-size: 14px;
+}
+
+.sidebar button {
+  margin-top: 10px;
+  background: #F8C80E;
+  border: none;
+  border-radius: 999px;
+  padding: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Main content */
+.content {
+  flex: 1;
+  padding: 20px;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: rgba(255, 255, 255, .95);
+  backdrop-filter: blur(6px);
+  border: 1px solid #e7e7e7;
+  border-radius: 20px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: #F8C80E;
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+}
+
+.brand-name {
+  font-weight: 900;
+  font-size: 20px;
+}
+
+.btn {
+  border: none;
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-weight: 700;
+  cursor: pointer;
+  background: #F8C80E;
+}
+
+/* KPI grid */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 30px;
+}
+
+.kpi-card {
+  background: #fff;
+  border-radius: 24px;
+  padding: 20px;
+  text-align: left;
+  box-shadow: 0 6px 25px rgba(0,0,0,0.07);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.kpi-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.kpi-card .label {
+  font-size: 13px;
+  color: #666;
+}
+
+.kpi-card .val {
+  font-size: 24px;
+  font-weight: 900;
+  margin-top: 6px;
+  margin-bottom: 12px;
+}
+
+.kpi-card canvas {
+  width: 100% !important;
+  height: 60px !important;
+}
+
+/* Bottom charts */
+.bottom-charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.bottom-chart-wrapper {
+  background: #fff;
+  border-radius: 24px;
+  padding: 20px;
+  box-shadow: 0 6px 25px rgba(0,0,0,0.07);
+  height: 300px;
+}
+
+.bottom-chart-wrapper canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.footer {
+  margin-top: 40px;
+  text-align: center;
+  font-size: 12px;
+  color: #888;
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    display: none;
+  }
+  body {
+    flex-direction: column;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <h2>Filters</h2>
+  <form id="filterForm">
+    <div>
+      <label for="agent">Agent</label>
+      <select id="agent" name="agent">
+        <option value="">All</option>
+        {% for a in agents %}
+          <option value="{{ a }}" {% if request.args.get('agent') == a %}selected{% endif %}>{{ a }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="team_leader">Team Leader</label>
+      <select id="team_leader" name="team_leader">
+        <option value="">All</option>
+        {% for l in leaders %}
+          <option value="{{ l }}" {% if request.args.get('team_leader') == l %}selected{% endif %}>{{ l }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="supervisor">Supervisor</label>
+      <select id="supervisor" name="supervisor">
+        <option value="">All</option>
+        {% for s in supervisors %}
+          <option value="{{ s }}" {% if request.args.get('supervisor') == s %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="from_date">From</label>
+      <input type="date" id="from_date" name="from_date" value="{{ request.args.get('from_date','') }}" />
+    </div>
+    <div>
+      <label for="to_date">To</label>
+      <input type="date" id="to_date" name="to_date" value="{{ request.args.get('to_date','') }}" />
+    </div>
+    <button type="button" onclick="applyFilter()">Apply Filter</button>
+  </form>
+</div>
+
+<!-- Main Content -->
+<div class="content">
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-badge">K</div>
+      <div class="brand-name">Keeta Dashboard</div>
+    </div>
+    <button class="btn" onclick="downloadScreenshot()">Share</button>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="kpi-grid">
+    {% for kpi in kpis %}
+      <div class="kpi-card">
+        <div class="label">{{ kpi.label }}</div>
+        <div class="val">{{ kpi.value }}</div>
+        <canvas id="chart-{{ loop.index }}"></canvas>
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- Bottom Charts -->
+  <div class="bottom-charts">
+    <div class="bottom-chart-wrapper">
+      <canvas id="bottom-csat"></canvas>
+    </div>
+    <div class="bottom-chart-wrapper">
+      <canvas id="bottom-pending"></canvas>
+    </div>
+    <div class="bottom-chart-wrapper">
+      <canvas id="bottom-resolved"></canvas>
+    </div>
+    <div class="bottom-chart-wrapper">
+      <canvas id="bottom-active"></canvas>
+    </div>
+    <div class="bottom-chart-wrapper">
+      <canvas id="bottom-total"></canvas>
+    </div>
+    <div class="bottom-chart-wrapper">
+      <canvas id="bottom-pie"></canvas>
+    </div>
+  </div>
+
+  <div class="footer">
+    Data-driven Chat Operations dashboard — Powered by e& CX Solutions Egypt
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// KPI sparkline charts
+const kpiTrends = {{ kpi_trends | tojson }};
+Object.keys(kpiTrends).forEach((label, i) => {
+  const ctx = document.getElementById(`chart-${i+1}`).getContext('2d');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: kpiTrends[label].map((_, idx) => idx + 1),
+      datasets: [{
+        data: kpiTrends[label],
+        borderColor: '#F8C80E',
+        backgroundColor: 'rgba(248,200,14,0.2)',
+        tension: 0.3,
+        fill: true,
+        pointRadius: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { display: false }, y: { display: false } }
+    }
+  });
+});
+
+// Bottom charts with titles, legends, axes
+function createBottomChart(id, data, label, title, type='line') {
+  const ctx = document.getElementById(id).getContext('2d');
+  new Chart(ctx, {
+    type: type,
+    data: {
+      labels: data.map((_, idx) => idx + 1),
+      datasets: [{
+        data: data,
+        label: label,
+        borderColor: '#F8C80E',
+        backgroundColor: 'rgba(248,200,14,0.2)',
+        tension: 0.3,
+        fill: true,
+        pointRadius: 3
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: true, position: 'top' },
+        title: { display: true, text: title, font: { size: 16, weight: 'bold' } }
+      },
+      scales: {
+        x: { display: true, title: { display: true, text: 'Time' } },
+        y: { display: true, title: { display: true, text: label } }
+      }
+    }
+  });
+}
+
+// Create bottom charts
+createBottomChart('bottom-csat', kpiTrends['Avg CSAT'] || [], 'CSAT', 'Customer Satisfaction Over Time');
+createBottomChart('bottom-pending', kpiTrends['Pending Tickets'] || [], 'Pending Tickets', 'Pending Tickets Over Time');
+createBottomChart('bottom-resolved', kpiTrends['Resolved Tickets'] || [], 'Resolved Tickets', 'Resolved Tickets Over Time');
+createBottomChart('bottom-active', kpiTrends['Active Agents'] || [], 'Active Agents', 'Active Agents Over Time');
+createBottomChart('bottom-total', kpiTrends['Total Chats'] || [], 'Total Chats', 'Total Chats Over Time');
+
+// Pie chart for Pending vs Resolved Tickets
+const pending = kpiTrends['Pending Tickets'] ? kpiTrends['Pending Tickets'].reduce((a,b)=>a+b,0) : 0;
+const resolved = kpiTrends['Resolved Tickets'] ? kpiTrends['Resolved Tickets'].reduce((a,b)=>a+b,0) : 0;
+new Chart(document.getElementById('bottom-pie').getContext('2d'), {
+  type: 'pie',
+  data: {
+    labels: ['Pending Tickets', 'Resolved Tickets'],
+    datasets: [{ data: [pending, resolved], backgroundColor: ['#F8C80E','#111'] }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: true, position: 'top' },
+      title: { display: true, text: 'Ticket Distribution', font: { size: 16, weight: 'bold' } }
+    }
+  }
+});
+
+function applyFilter() {
+  const form = document.getElementById("filterForm");
+  const params = new URLSearchParams(new FormData(form));
+  window.location.href = "/overall?" + params.toString();
+}
+
+function downloadScreenshot() {
+  html2canvas(document.body, { scale: 2 }).then(canvas => {
+      const link = document.createElement('a');
+      link.download = 'keeta_dashboard.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+  });
+}
+</script>
+</body>
+</html>
+
