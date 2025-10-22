@@ -14,6 +14,7 @@ body {
   background: #f9f9f9;
   display: flex;
   min-height: 100vh;
+  transition: background 0.3s, color 0.3s;
 }
 
 /* Sidebar */
@@ -29,6 +30,7 @@ body {
   box-shadow: 0 8px 20px rgba(0,0,0,0.08);
   display: flex;
   flex-direction: column;
+  transition: background 0.3s, color 0.3s;
 }
 
 .sidebar h2 {
@@ -85,6 +87,7 @@ body {
   align-items: center;
   justify-content: space-between;
   box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  transition: background 0.3s, color 0.3s;
 }
 
 .brand {
@@ -101,6 +104,9 @@ body {
   display: grid;
   place-items: center;
   font-weight: 900;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.3s, color 0.3s;
 }
 
 .brand-name {
@@ -108,16 +114,6 @@ body {
   font-size: 20px;
 }
 
-.btn {
-  border: none;
-  border-radius: 999px;
-  padding: 10px 14px;
-  font-weight: 700;
-  cursor: pointer;
-  background: #F8C80E;
-}
-
-/* KPI grid */
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -131,7 +127,7 @@ body {
   padding: 20px;
   text-align: left;
   box-shadow: 0 6px 25px rgba(0,0,0,0.07);
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s, background 0.3s, color 0.3s;
 }
 
 .kpi-card:hover {
@@ -156,7 +152,6 @@ body {
   height: 60px !important;
 }
 
-/* Bottom charts */
 .bottom-charts {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -169,6 +164,7 @@ body {
   padding: 20px;
   box-shadow: 0 6px 25px rgba(0,0,0,0.07);
   height: 300px;
+  transition: background 0.3s, color 0.3s;
 }
 
 .bottom-chart-wrapper canvas {
@@ -181,6 +177,34 @@ body {
   text-align: center;
   font-size: 12px;
   color: #888;
+}
+
+/* Dark mode */
+body.dark {
+  background: #111;
+  color: #eee;
+}
+
+body.dark .sidebar,
+body.dark .topbar,
+body.dark .kpi-card,
+body.dark .bottom-chart-wrapper {
+  background: #1c1c1c;
+  color: #eee;
+  border-color: #333;
+  box-shadow: 0 6px 20px rgba(255,255,255,0.05);
+}
+
+body.dark .brand-badge {
+  background: #333;
+  color: #F8C80E;
+}
+
+body.dark select,
+body.dark input {
+  background: #222;
+  color: #eee;
+  border-color: #444;
 }
 
 @media (max-width: 900px) {
@@ -242,10 +266,9 @@ body {
 <div class="content">
   <div class="topbar">
     <div class="brand">
-      <div class="brand-badge">K</div>
+      <div class="brand-badge" id="themeToggle" onclick="toggleTheme()">K</div>
       <div class="brand-name">Keeta Dashboard</div>
     </div>
-    <button class="btn" onclick="downloadScreenshot()">Share</button>
   </div>
 
   <!-- KPI Cards -->
@@ -261,24 +284,12 @@ body {
 
   <!-- Bottom Charts -->
   <div class="bottom-charts">
-    <div class="bottom-chart-wrapper">
-      <canvas id="bottom-csat"></canvas>
-    </div>
-    <div class="bottom-chart-wrapper">
-      <canvas id="bottom-pending"></canvas>
-    </div>
-    <div class="bottom-chart-wrapper">
-      <canvas id="bottom-resolved"></canvas>
-    </div>
-    <div class="bottom-chart-wrapper">
-      <canvas id="bottom-active"></canvas>
-    </div>
-    <div class="bottom-chart-wrapper">
-      <canvas id="bottom-total"></canvas>
-    </div>
-    <div class="bottom-chart-wrapper">
-      <canvas id="bottom-pie"></canvas>
-    </div>
+    <div class="bottom-chart-wrapper"><canvas id="bottom-csat"></canvas></div>
+    <div class="bottom-chart-wrapper"><canvas id="bottom-pending"></canvas></div>
+    <div class="bottom-chart-wrapper"><canvas id="bottom-resolved"></canvas></div>
+    <div class="bottom-chart-wrapper"><canvas id="bottom-active"></canvas></div>
+    <div class="bottom-chart-wrapper"><canvas id="bottom-total"></canvas></div>
+    <div class="bottom-chart-wrapper"><canvas id="bottom-pie"></canvas></div>
   </div>
 
   <div class="footer">
@@ -286,11 +297,11 @@ body {
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-// KPI sparkline charts
 const kpiTrends = {{ kpi_trends | tojson }};
+
+// KPI sparkline charts
 Object.keys(kpiTrends).forEach((label, i) => {
   const ctx = document.getElementById(`chart-${i+1}`).getContext('2d');
   new Chart(ctx, {
@@ -315,7 +326,7 @@ Object.keys(kpiTrends).forEach((label, i) => {
   });
 });
 
-// Bottom charts with titles, legends, axes
+// Bottom charts
 function createBottomChart(id, data, label, title, type='line') {
   const ctx = document.getElementById(id).getContext('2d');
   new Chart(ctx, {
@@ -354,7 +365,7 @@ createBottomChart('bottom-resolved', kpiTrends['Resolved Tickets'] || [], 'Resol
 createBottomChart('bottom-active', kpiTrends['Active Agents'] || [], 'Active Agents', 'Active Agents Over Time');
 createBottomChart('bottom-total', kpiTrends['Total Chats'] || [], 'Total Chats', 'Total Chats Over Time');
 
-// Pie chart for Pending vs Resolved Tickets
+// Pie chart
 const pending = kpiTrends['Pending Tickets'] ? kpiTrends['Pending Tickets'].reduce((a,b)=>a+b,0) : 0;
 const resolved = kpiTrends['Resolved Tickets'] ? kpiTrends['Resolved Tickets'].reduce((a,b)=>a+b,0) : 0;
 new Chart(document.getElementById('bottom-pie').getContext('2d'), {
@@ -373,21 +384,30 @@ new Chart(document.getElementById('bottom-pie').getContext('2d'), {
   }
 });
 
+// Apply filters and preserve dark mode
 function applyFilter() {
   const form = document.getElementById("filterForm");
   const params = new URLSearchParams(new FormData(form));
+  const theme = localStorage.getItem("theme");
+  if (theme === "dark") params.append("theme", "dark");
   window.location.href = "/overall?" + params.toString();
 }
 
-function downloadScreenshot() {
-  html2canvas(document.body, { scale: 2 }).then(canvas => {
-      const link = document.createElement('a');
-      link.download = 'keeta_dashboard.png';
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-  });
+// Theme toggle with persistence
+function toggleTheme() {
+  const isDark = document.body.classList.toggle("dark");
+  localStorage.setItem("theme", isDark ? "dark" : "light");
 }
+
+// Restore theme from localStorage
+window.addEventListener("DOMContentLoaded", () => {
+  const savedTheme = localStorage.getItem("theme");
+  if (savedTheme === "dark") {
+    document.body.classList.add("dark");
+  }
+});
 </script>
+
 </body>
 </html>
 
