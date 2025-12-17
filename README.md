@@ -1,5 +1,5 @@
-# 📊 Keeta KPI Dashboard (Flask)
-
+<a href="https://freeimage.host/i/fcrlY1p"><img src="https://iili.io/fcrlY1p.md.png" alt="fcrlY1p.md.png" border="0"></a>
+# 📊 Keeta-Dashboard (Flask)
 A **Flask-based Customer Support KPI Dashboard** that provides an aggregated, filterable view of operational metrics such as chats, response times, CSAT, ticket status, agent activity, and sales conversions.
 
 This project is designed for **operations teams, team leaders, and supervisors** to monitor performance trends and make data-driven decisions.
@@ -8,7 +8,7 @@ This project is designed for **operations teams, team leaders, and supervisors**
 
 ## 🚀 Overview
 
-The Keeta KPI Dashboard loads support data from a CSV file and exposes an `/overall` route that renders a comprehensive dashboard with:
+The **Keeta-Dashboard** loads support data from a CSV file and exposes an `/overall` route that renders a comprehensive dashboard with:
 
 * High-level KPI cards
 * Sparkline trends for each KPI
@@ -181,4 +181,9 @@ This makes the dashboard reliable for real operational data.
 ## 👤 Author
 
 **Hussein Ali**
-Data Engineer
+Data & Operations Engineer
+---
+
+## 📄 License
+
+This project is intended for internal analytics and learning purposes. You are free to modify and extend it as needed.
